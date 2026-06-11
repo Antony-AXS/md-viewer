@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MD Viewer</title>
+  <link id="hljs-theme" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="sidebar" role="navigation" aria-label="File browser">
+    <div class="sidebar-header">
+      <div class="logo-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <line x1="10" y1="9" x2="8" y2="9"/>
+        </svg>
+        <span>MD Viewer</span>
+      </div>
+      <div class="sidebar-actions">
+        <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+          <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+          <svg class="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="search-container">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M9.5 9.5L13 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <input id="search-input" type="text" placeholder="Search files… (Ctrl+K)" autocomplete="off" spellcheck="false">
+    </div>
+    <div id="file-tree"></div>
+  </div>
+  <button id="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar (Ctrl+B)" title="Toggle sidebar (Ctrl+B)">
+    <svg class="sidebar-toggle-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+  <div id="content" role="main" aria-label="Document content">
+    <div class="content-toolbar">
+      <div id="breadcrumb"></div>
+      <div class="toolbar-actions">
+        <span id="reading-info"></span>
+        <button class="toolbar-btn toolbar-bookmark" onclick="toggleBookmark()" title="Bookmark this file">★</button>
+        <button class="toolbar-btn" onclick="changeFontSize(-1)" title="Decrease font size">A-</button>
+        <button class="toolbar-btn" onclick="changeFontSize(1)" title="Increase font size">A+</button>
+        <button class="toolbar-btn" onclick="toggleHighContrast()" title="Toggle high contrast" id="hc-toggle">HC</button>
+        <div class="edit-dropdown-wrapper">
+          <button class="toolbar-btn" onclick="toggleEditMenu()" title="Edit file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <div id="edit-menu" class="edit-dropdown hidden">
+            <button class="edit-dropdown-item" onclick="openInVSCode();closeEditMenu()">VS Code</button>
+            <button class="edit-dropdown-item" onclick="openInNvim();closeEditMenu()">Neovim</button>
+            <button class="edit-dropdown-item" onclick="openEditor();closeEditMenu()">Live Editor</button>
+          </div>
+        </div>
+        <button class="toolbar-btn" onclick="shareAsHtml()" title="Share as HTML">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        </button>
+        <button class="toolbar-btn" onclick="exportPdf()" title="Export to PDF">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="nav-buttons" id="nav-buttons" style="display:none;">
+      <button class="nav-btn" id="prev-file-btn" onclick="navigatePrevFile()" title="Previous file">← Prev</button>
+      <button class="nav-btn" id="next-file-btn" onclick="navigateNextFile()" title="Next file">Next →</button>
+    </div>
+    <div id="content-pane"></div>
+  </div>
+  <div id="editor-panel" class="editor-hidden" role="complementary" aria-label="Markdown editor">
+    <div class="editor-header">
+      <span>Editor</span>
+      <div class="editor-actions">
+        <button class="toolbar-btn" onclick="saveEditorContent()" title="Save">Save</button>
+        <button class="toolbar-btn" onclick="closeEditor()" title="Close editor">✕</button>
+      </div>
+    </div>
+    <textarea id="editor-textarea" spellcheck="true"></textarea>
+  </div>
+  <div id="lightbox" class="lightbox-hidden" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="">
+  </div>
+  <div id="toc-panel" class="toc-hidden">
+    <div class="toc-header">
+      <span>On this page</span>
+      <button class="toc-close" onclick="toggleToc()" aria-label="Close table of contents">&times;</button>
+    </div>
+    <nav id="toc-list"></nav>
+  </div>
+  <button id="toc-toggle" onclick="toggleToc()" aria-label="Table of contents" title="Table of contents (Ctrl+T)" style="display:none;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+      <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+    </svg>
+  </button>
+  <div id="command-palette" class="cp-hidden" onclick="if(event.target===this)closeCommandPalette()">
+    <div class="cp-box">
+      <input class="cp-input" id="cp-input" type="text" placeholder="Type a file name, heading, or action…" autocomplete="off" spellcheck="false">
+      <div class="cp-results" id="cp-results"></div>
+    </div>
+  </div>
+  <div id="toast"></div>
+  <div id="drop-overlay" class="drop-overlay hidden">Drop .md file to view</div>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
