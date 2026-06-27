@@ -1362,6 +1362,17 @@ function addLanguageLabels() {
 function renderMermaidBlocks() {
   if (typeof document === 'undefined' || typeof mermaid === 'undefined') return;
   var codes = document.querySelectorAll('#content-pane code.language-mermaid');
+  if (codes.length === 0) return;
+  
+  // Initialize mermaid with dark theme support
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark' || 
+               document.documentElement.getAttribute('data-theme') === 'high-contrast';
+  mermaid.initialize({ 
+    startOnLoad: false, 
+    theme: isDark ? 'dark' : 'default',
+    securityLevel: 'loose'
+  });
+
   codes.forEach(function (code, i) {
     var pre = code.parentElement;
     var container = document.createElement('div');
@@ -1369,7 +1380,7 @@ function renderMermaidBlocks() {
     container.textContent = code.textContent;
     pre.parentNode.replaceChild(container, pre);
   });
-  try { mermaid.init(undefined, '.mermaid'); } catch (e) { console.warn('Mermaid render error:', e); }
+  try { mermaid.run({ nodes: document.querySelectorAll('.mermaid') }); } catch (e) { console.warn('Mermaid render error:', e); }
 }
 
 /** Build table of contents from headings */
